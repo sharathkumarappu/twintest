@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "twintest/run-summary",
+  "title": "Twintest Run Summary",
+  "description": "Structured output for a twintest suite run.",
+  "type": "object",
+  "required": ["runId", "timestamp", "duration", "status", "totals"],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "description": "Unique run identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of run start"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Total run duration in milliseconds"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error"],
+      "description": "Overall run status"
+    },
+    "totals": {
+      "type": "object",
+      "required": ["scenarios", "passed", "failed", "skipped"],
+      "properties": {
+        "scenarios": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "file", "status"],
+        "properties": {
+          "name": { "type": "string" },
+          "file": { "type": "string" },
+          "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "status"],
+              "properties": {
+                "name": { "type": "string" },
+                "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
+                "error": { "type": "string" },
+                "screenshot": { "type": "string" },
+                "duration": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "os": { "type": "string" },
+        "winappdriver": { "type": "string" },
+        "node": { "type": "string" }
+      }
+    }
+  }
+}

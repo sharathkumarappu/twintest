@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "twintest/subagent-returns/repair-worker",
+  "title": "Repair Worker Return",
+  "description": "Schema for the return value of a self-repair worker subagent.",
+  "type": "object",
+  "required": ["handover"],
+  "properties": {
+    "handover": {
+      "type": "object",
+      "required": ["role", "cycle", "status", "next-action"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^repair-worker-"
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["healed", "stalled", "app-bug", "quarantined", "operator-pending", "in-progress"]
+        },
+        "next-action": {
+          "type": "string"
+        }
+      }
+    },
+    "feature": {
+      "type": "string",
+      "description": "The feature file being repaired"
+    },
+    "rootCause": {
+      "type": "string",
+      "description": "Diagnosed root cause of the failure"
+    },
+    "fixApplied": {
+      "type": "string",
+      "description": "Description of the fix applied"
+    },
+    "stageLog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "timestamp"],
+        "properties": {
+          "stage": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

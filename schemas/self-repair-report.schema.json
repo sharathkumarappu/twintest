@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "twintest/self-repair-report",
+  "title": "Self-Repair Session Report",
+  "description": "Audit-grade report for an autonomous self-repair session.",
+  "type": "object",
+  "required": ["runId", "mode", "timestamp", "baseline", "classification", "repairs", "verification", "summary"],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "description": "Unique repair session identifier"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["script", "interactive"],
+      "description": "Whether the repair was driven by CLI or interactively"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "baseline": {
+      "type": "object",
+      "required": ["runs", "redFeatures", "greenFeatures"],
+      "properties": {
+        "runs": { "type": "integer", "minimum": 1 },
+        "redFeatures": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "greenFeatures": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "classification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["feature", "category"],
+        "properties": {
+          "feature": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["deterministic", "flaky", "environment"]
+          },
+          "failureSignature": { "type": "string" }
+        }
+      }
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["feature", "status"],
+        "properties": {
+          "feature": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["healed", "stalled", "app-bug", "quarantined", "operator-pending"]
+          },
+          "rootCause": { "type": "string" },
+          "fixApplied": { "type": "string" },
+          "cycles": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["runs", "allGreen"],
+      "properties": {
+        "runs": { "type": "integer", "minimum": 1 },
+        "allGreen": { "type": "boolean" },
+        "failures": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "healed", "unresolved"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "healed": { "type": "integer", "minimum": 0 },
+        "unresolved": { "type": "integer", "minimum": 0 },
+        "appBugs": { "type": "integer", "minimum": 0 },
+        "quarantined": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

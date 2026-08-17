@@ -1,0 +1,119 @@
+{
+  "windows": [
+    {
+      "name": "SecurityWarning",
+      "description": "ClickOnce 'Application Run - Security Warning' popup",
+      "elements": [
+        {
+          "elementName": "runButton",
+          "selector": { "name": "Run" },
+          "description": "Run button to accept the ClickOnce security warning"
+        },
+        {
+          "elementName": "dontRunButton",
+          "selector": { "name": "Don't Run" },
+          "description": "Don't Run button to reject the ClickOnce app"
+        }
+      ]
+    },
+    {
+      "name": "WMSApp",
+      "description": "IMI Supply Chain Smart Client — main application window",
+      "elements": []
+    },
+    {
+      "name": "LoginPage",
+      "description": "WMS login screen",
+      "elements": [
+        {
+          "elementName": "usernameInput",
+          "selector": { "automationId": "UserFld" },
+          "description": "Username text field"
+        },
+        {
+          "elementName": "passwordInput",
+          "selector": { "className": "PasswordBox" },
+          "description": "Password text field"
+        },
+        {
+          "elementName": "loginButton",
+          "selector": { "name": "Login" },
+          "description": "Login button"
+        }
+      ]
+    },
+    {
+      "name": "ChangeUserSettingsPage",
+      "description": "Change User Settings dialog that may appear after login",
+      "elements": [
+        {
+          "elementName": "okButton",
+          "selector": { "name": "OK" },
+          "description": "OK button to dismiss the dialog"
+        },
+        {
+          "elementName": "cancelButton",
+          "selector": { "name": "Cancel" },
+          "description": "Cancel button"
+        }
+      ]
+    },
+    {
+      "name": "ConfirmationPopupPage",
+      "description": "Confirmation popup within the Smart Client",
+      "elements": [
+        {
+          "elementName": "yesButton",
+          "selector": { "xpath": "//Window[@Name='IMI Supply Chain Smart Client']//Button[@Name='Yes']" },
+          "description": "Yes button on confirmation popup"
+        }
+      ]
+    },
+    {
+      "name": "LeftPanelMenuPage",
+      "description": "Left navigation panel of the Smart Client",
+      "elements": [
+        {
+          "elementName": "startButton",
+          "selector": { "xpath": "//Button[@Name='Start']" },
+          "description": "Start menu button"
+        },
+        {
+          "elementName": "startList",
+          "selector": { "xpath": "//List[@AutomationId='startMenu']" },
+          "description": "Start menu list"
+        },
+        {
+          "elementName": "startGroup",
+          "selector": { "xpath": "//Group[@Name='Start']" },
+          "description": "Start menu group"
+        },
+        {
+          "elementName": "warehouseButton",
+          "selector": { "xpath": "//Button[@AutomationId='Warehouse']" },
+          "description": "Warehouse navigation button"
+        },
+        {
+          "elementName": "warehouseGatewayButton",
+          "selector": { "xpath": "//Button[@AutomationId='Gateway']" },
+          "description": "Warehouse Gateway navigation button"
+        },
+        {
+          "elementName": "transportationButton",
+          "selector": { "xpath": "//*[@AutomationId='Transportation']" },
+          "description": "Transportation navigation button"
+        },
+        {
+          "elementName": "outputManagerButton",
+          "selector": { "xpath": "//Button[@AutomationId='OutputManager']" },
+          "description": "Output Manager navigation button"
+        },
+        {
+          "elementName": "dockButton",
+          "selector": { "xpath": "//Button[@AutomationId='Dock']" },
+          "description": "Dock navigation button"
+        }
+      ]
+    }
+  ]
+}

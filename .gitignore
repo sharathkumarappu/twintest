@@ -1,0 +1,10 @@
+node_modules/
+dist/
+logs/
+screenshots/
+allure-results/
+allure-report/
+.twintest/
+*.log
+.env
+.env.local

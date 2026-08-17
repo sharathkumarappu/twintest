@@ -1,0 +1,9 @@
+{
+  "windows": [
+    {
+      "name": "MainWindow",
+      "description": "Default window — replace with your application's main window",
+      "elements": []
+    }
+  ]
+}
