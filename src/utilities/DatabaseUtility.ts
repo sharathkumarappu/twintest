@@ -6,9 +6,9 @@
  * factory around the `oracledb` driver.
  *
  * Connection credentials are read from environment variables:
- *   - SQL_DATABASE_USER
- *   - SQL_DATABASE_PASSWORD
- *   - SQL_DATABASE_URL  (Oracle connect string, e.g. "host:port/service")
+ *   - SQL_DATABASE_USER     (fallback: DB_USER)
+ *   - SQL_DATABASE_PASSWORD (fallback: DB_PASSWORD)
+ *   - SQL_DATABASE_URL      (fallback: DB_URL — Oracle connect string, e.g. "host:port/service")
  */
 
 import oracledb from 'oracledb';
@@ -104,14 +104,29 @@ export interface DbConnectionConfig {
 }
 
 /**
+ * Convert a JDBC Oracle URL to oracledb Easy Connect format.
+ * Strips the "jdbc:oracle:thin:@//" or "jdbc:oracle:thin:@" prefix so the
+ * same .env value works for both Java (wms-test-automation) and Node.
+ *
+ *   "jdbc:oracle:thin:@//host:port/service"  →  "host:port/service"
+ *   "jdbc:oracle:thin:@host:port/service"    →  "host:port/service"
+ *   "host:port/service"                      →  "host:port/service" (no-op)
+ */
+function toEasyConnect(url: string): string {
+  return url.replace(/^jdbc:oracle:thin:@\/\/|^jdbc:oracle:thin:@/i, '');
+}
+
+/**
  * Build a connection config from environment variables or explicit overrides.
  * Falls back to process.env values when individual fields are omitted.
+ * Automatically strips JDBC prefixes from the connect string.
  */
 export function getConnectionConfig(overrides?: Partial<DbConnectionConfig>): DbConnectionConfig {
+  const raw = overrides?.connectString ?? process.env.SQL_DATABASE_URL ?? process.env.DB_URL ?? '';
   return {
-    user: overrides?.user ?? process.env.SQL_DATABASE_USER ?? '',
-    password: overrides?.password ?? process.env.SQL_DATABASE_PASSWORD ?? '',
-    connectString: overrides?.connectString ?? process.env.SQL_DATABASE_URL ?? '',
+    user: overrides?.user ?? process.env.SQL_DATABASE_USER ?? process.env.DB_USER ?? '',
+    password: overrides?.password ?? process.env.SQL_DATABASE_PASSWORD ?? process.env.DB_PASSWORD ?? '',
+    connectString: toEasyConnect(raw),
   };
 }
 
@@ -123,7 +138,7 @@ export async function getConnection(config?: Partial<DbConnectionConfig>): Promi
   const cfg = getConnectionConfig(config);
   if (!cfg.user || !cfg.password || !cfg.connectString) {
     throw new Error(
-      'Database connection not configured. Set SQL_DATABASE_USER, SQL_DATABASE_PASSWORD, and SQL_DATABASE_URL environment variables.',
+      'Database connection not configured. Set SQL_DATABASE_USER (or DB_USER), SQL_DATABASE_PASSWORD (or DB_PASSWORD), and SQL_DATABASE_URL (or DB_URL) environment variables.',
     );
   }
   return oracledb.getConnection({

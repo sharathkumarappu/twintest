@@ -21,6 +21,7 @@
 import { Given, DataTable } from '@cucumber/cucumber';
 import { DesktopWorld } from '../support/world.js';
 import { sqlLiteral, sqlIdentifier } from '../../../src/utilities/DatabaseUtility.js';
+import { waitSeconds } from '../../../src/utilities/wait.js';
 
 // ---------------------------------------------------------------------------
 // Connection verification
@@ -280,7 +281,7 @@ Given(
         break;
       }
       console.log(`[twintest-db] Data not found yet, retrying for another ${remaining}s...`);
-      await new Promise(resolve => setTimeout(resolve, 10_000));
+      await waitSeconds(10);
       remaining -= 10;
     }
 

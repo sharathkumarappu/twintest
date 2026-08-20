@@ -10,6 +10,7 @@
  */
 
 import { ElementRepository } from './ElementRepository.js';
+import { execSync } from 'child_process';
 
 export class DesktopSteps {
   private repo: ElementRepository;
@@ -45,6 +46,34 @@ export class DesktopSteps {
     const el = await this.driver.$(sel);
     await el.waitForExist({ timeout: timeout ?? this.defaultTimeout });
     return el;
+  }
+
+  /** Find an element and wait until it is displayed and enabled. */
+  private async findInteractableElement(
+    windowName: string,
+    elementName: string,
+    timeout?: number,
+  ) {
+    const el = await this.findElement(windowName, elementName, timeout);
+    const t = timeout ?? this.defaultTimeout;
+    await el.waitForDisplayed({ timeout: t });
+    await el.waitForEnabled({ timeout: t });
+    return el;
+  }
+
+  /** Perform a click on an already-located element, falling back to a
+   *  coordinate-based click when the standard click doesn't register. */
+  private async safeClick(el: Awaited<ReturnType<WebdriverIO.Browser['$']>>, label: string): Promise<void> {
+    try {
+      await el.click();
+    } catch {
+      console.log(`[twintest] Standard click failed for '${label}', trying coordinate click`);
+      await el.moveTo();
+      await this.driver.action('pointer')
+        .down({ button: 0 })
+        .up({ button: 0 })
+        .perform();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -85,39 +114,44 @@ export class DesktopSteps {
   // Element interactions
   // ---------------------------------------------------------------------------
 
-  /** Click an element. */
+  /** Click an element. Verifies it is displayed and enabled first, then
+   *  falls back to a coordinate-based click if the standard click fails to
+   *  register (a known WinAppDriver false-positive). */
   async click(windowName: string, elementName: string): Promise<void> {
     console.log(`[twintest] Clicking '${elementName}' on '${windowName}'`);
-    const el = await this.findElement(windowName, elementName);
-    await el.click();
+    const el = await this.findInteractableElement(windowName, elementName);
+    await this.safeClick(el, elementName);
     console.log(`[twintest] Clicked '${elementName}' on '${windowName}'`);
   }
 
   /** Double-click an element. */
   async doubleClick(windowName: string, elementName: string): Promise<void> {
     console.log(`[twintest] Double-clicking '${elementName}' on '${windowName}'`);
-    const el = await this.findElement(windowName, elementName);
+    const el = await this.findInteractableElement(windowName, elementName);
     await el.doubleClick();
+    console.log(`[twintest] Double-clicked '${elementName}' on '${windowName}'`);
   }
 
   /** Right-click (context click) an element. */
   async rightClick(windowName: string, elementName: string): Promise<void> {
     console.log(`[twintest] Right-clicking '${elementName}' on '${windowName}'`);
-    const el = await this.findElement(windowName, elementName);
+    const el = await this.findInteractableElement(windowName, elementName);
     await el.click({ button: 'right' });
+    console.log(`[twintest] Right-clicked '${elementName}' on '${windowName}'`);
   }
 
   /** Type text into an element (appends to existing content). */
   async type(windowName: string, elementName: string, text: string): Promise<void> {
     console.log(`[twintest] Typing into '${elementName}' on '${windowName}'`);
-    const el = await this.findElement(windowName, elementName);
+    const el = await this.findInteractableElement(windowName, elementName);
     await el.addValue(text);
+    console.log(`[twintest] Typed into '${elementName}' on '${windowName}'`);
   }
 
   /** Clear an element and type new text. */
   async clearAndType(windowName: string, elementName: string, text: string): Promise<void> {
     console.log(`[twintest] Filling '${elementName}' on '${windowName}' with text`);
-    const el = await this.findElement(windowName, elementName);
+    const el = await this.findInteractableElement(windowName, elementName);
     await el.clearValue();
     await el.setValue(text);
     console.log(`[twintest] Filled '${elementName}' on '${windowName}'`);
@@ -130,24 +164,25 @@ export class DesktopSteps {
   /** Select a dropdown/combobox option by visible text. */
   async selectByText(windowName: string, elementName: string, text: string): Promise<void> {
     console.log(`[twintest] Selecting '${text}' from '${elementName}' on '${windowName}'`);
-    const el = await this.findElement(windowName, elementName);
+    const el = await this.findInteractableElement(windowName, elementName);
     // WinAppDriver ComboBox: click to open, then find and click the item
-    await el.click();
+    await this.safeClick(el, elementName);
     // Wait for the dropdown to expand, then find the item by name
     const item = await this.driver.$(`[name="${text}"]`);
     await item.waitForExist({ timeout: this.defaultTimeout });
     await item.click();
+    console.log(`[twintest] Selected '${text}' from '${elementName}' on '${windowName}'`);
   }
 
   /** Select a dropdown/combobox option by index. */
   async selectByIndex(windowName: string, elementName: string, index: number): Promise<void> {
-    const el = await this.findElement(windowName, elementName);
-    await el.click();
-    // Navigate using arrow keys
-    for (let i = 0; i <= index; i++) {
-      await this.driver.keys(['ArrowDown']);
-    }
-    await this.driver.keys(['Enter']);
+    console.log(`[twintest] Selecting index ${index} from '${elementName}' on '${windowName}'`);
+    const el = await this.findInteractableElement(windowName, elementName);
+    await this.safeClick(el, elementName);
+    // Navigate using arrow keys via PowerShell SendKeys (WinAppDriver compatible)
+    const downKeys = '{DOWN}'.repeat(index + 1) + '{ENTER}';
+    await this.sendKeys([downKeys]);
+    console.log(`[twintest] Selected index ${index} from '${elementName}' on '${windowName}'`);
   }
 
   // ---------------------------------------------------------------------------
@@ -311,16 +346,52 @@ export class DesktopSteps {
   // Keyboard
   // ---------------------------------------------------------------------------
 
-  /** Send a sequence of keys (not targeted at a specific element). */
+  /**
+   * Send keys via PowerShell SendKeys.
+   * Uses System.Windows.Forms.SendKeys which works with all Windows apps
+   * regardless of WinAppDriver/Appium driver limitations.
+   *
+   * SendKeys syntax: https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.sendkeys
+   *   - Regular characters: sent as-is
+   *   - Special keys: {ENTER}, {TAB}, {ESC}, {DELETE}, {BACKSPACE}, {F1}-{F12},
+   *     {UP}, {DOWN}, {LEFT}, {RIGHT}, {PGUP}, {PGDN}, {HOME}, {END}
+   *   - Modifiers: % = Alt, ^ = Ctrl, + = Shift
+   *   - Examples: "%s" = Alt+S, "^s" = Ctrl+S, "%{F4}" = Alt+F4
+   */
   async sendKeys(keys: string[]): Promise<void> {
-    console.log(`[twintest] Sending keys: ${keys.join(', ')}`);
-    await this.driver.keys(keys);
+    const sendKeysStr = keys.join('');
+    console.log(`[twintest] Sending keys via PowerShell: ${sendKeysStr}`);
+    execSync(
+      `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${sendKeysStr.replace(/'/g, "''")}')"`,
+      { timeout: 10000 },
+    );
   }
 
-  /** Execute a keyboard shortcut (e.g., Ctrl+S, Alt+F4). */
+  /**
+   * Execute a keyboard shortcut (e.g., Ctrl+S, Alt+F4).
+   * Converts named keys to PowerShell SendKeys syntax.
+   */
   async keyboardShortcut(...keys: string[]): Promise<void> {
     console.log(`[twintest] Keyboard shortcut: ${keys.join('+')}`);
-    await this.driver.keys(keys);
+    const sendKeysStr = keys.map(k => this.toSendKeysToken(k)).join('');
+    execSync(
+      `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${sendKeysStr.replace(/'/g, "''")}')"`,
+      { timeout: 10000 },
+    );
+  }
+
+  /** Convert a key name to PowerShell SendKeys token. */
+  private toSendKeysToken(key: string): string {
+    const map: Record<string, string> = {
+      Alt: '%', Control: '^', Shift: '+', Ctrl: '^',
+      Enter: '{ENTER}', Escape: '{ESC}', Tab: '{TAB}', Space: ' ',
+      Delete: '{DELETE}', Backspace: '{BACKSPACE}',
+      ArrowUp: '{UP}', ArrowDown: '{DOWN}', ArrowLeft: '{LEFT}', ArrowRight: '{RIGHT}',
+      PageUp: '{PGUP}', PageDown: '{PGDN}', Home: '{HOME}', End: '{END}',
+      F1: '{F1}', F2: '{F2}', F3: '{F3}', F4: '{F4}', F5: '{F5}', F6: '{F6}',
+      F7: '{F7}', F8: '{F8}', F9: '{F9}', F10: '{F10}', F11: '{F11}', F12: '{F12}',
+    };
+    return map[key] ?? key;
   }
 
   // ---------------------------------------------------------------------------
@@ -334,15 +405,19 @@ export class DesktopSteps {
     targetWindow: string,
     targetElement: string,
   ): Promise<void> {
-    const source = await this.findElement(sourceWindow, sourceElement);
-    const target = await this.findElement(targetWindow, targetElement);
+    console.log(`[twintest] Dragging '${sourceElement}' on '${sourceWindow}' to '${targetElement}' on '${targetWindow}'`);
+    const source = await this.findInteractableElement(sourceWindow, sourceElement);
+    const target = await this.findInteractableElement(targetWindow, targetElement);
     await source.dragAndDrop(target);
+    console.log(`[twintest] Drag-and-drop completed`);
   }
 
   /** Hover over an element. */
   async hover(windowName: string, elementName: string): Promise<void> {
-    const el = await this.findElement(windowName, elementName);
+    console.log(`[twintest] Hovering over '${elementName}' on '${windowName}'`);
+    const el = await this.findInteractableElement(windowName, elementName);
     await el.moveTo();
+    console.log(`[twintest] Hovered over '${elementName}' on '${windowName}'`);
   }
 
   // ---------------------------------------------------------------------------
@@ -366,8 +441,11 @@ export class DesktopSteps {
 
   /** Scroll until an element is in view. */
   async scrollTo(windowName: string, elementName: string): Promise<void> {
+    console.log(`[twintest] Scrolling to '${elementName}' on '${windowName}'`);
     const el = await this.findElement(windowName, elementName);
+    await el.waitForDisplayed({ timeout: this.defaultTimeout });
     await el.scrollIntoView();
+    console.log(`[twintest] Scrolled to '${elementName}' on '${windowName}'`);
   }
 
   // ---------------------------------------------------------------------------

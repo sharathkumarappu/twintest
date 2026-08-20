@@ -5,12 +5,12 @@
       "description": "ClickOnce 'Application Run - Security Warning' popup",
       "elements": [
         {
-          "elementName": "runButton",
+          "elementName": "RunButton",
           "selector": { "name": "Run" },
           "description": "Run button to accept the ClickOnce security warning"
         },
         {
-          "elementName": "dontRunButton",
+          "elementName": "DontRunButton",
           "selector": { "name": "Don't Run" },
           "description": "Don't Run button to reject the ClickOnce app"
         }
@@ -26,17 +26,17 @@
       "description": "WMS login screen",
       "elements": [
         {
-          "elementName": "usernameInput",
+          "elementName": "UsernameInput",
           "selector": { "automationId": "UserFld" },
           "description": "Username text field"
         },
         {
-          "elementName": "passwordInput",
+          "elementName": "PasswordInput",
           "selector": { "className": "PasswordBox" },
           "description": "Password text field"
         },
         {
-          "elementName": "loginButton",
+          "elementName": "LoginButton",
           "selector": { "name": "Login" },
           "description": "Login button"
         }
@@ -47,12 +47,12 @@
       "description": "Change User Settings dialog that may appear after login",
       "elements": [
         {
-          "elementName": "okButton",
+          "elementName": "OKButton",
           "selector": { "name": "OK" },
           "description": "OK button to dismiss the dialog"
         },
         {
-          "elementName": "cancelButton",
+          "elementName": "CancelButton",
           "selector": { "name": "Cancel" },
           "description": "Cancel button"
         }
@@ -63,7 +63,7 @@
       "description": "Confirmation popup within the Smart Client",
       "elements": [
         {
-          "elementName": "yesButton",
+          "elementName": "YesButton",
           "selector": { "xpath": "//Window[@Name='IMI Supply Chain Smart Client']//Button[@Name='Yes']" },
           "description": "Yes button on confirmation popup"
         }
@@ -74,44 +74,65 @@
       "description": "Left navigation panel of the Smart Client",
       "elements": [
         {
-          "elementName": "startButton",
+          "elementName": "StartButton",
           "selector": { "xpath": "//Button[@Name='Start']" },
           "description": "Start menu button"
         },
         {
-          "elementName": "startList",
+          "elementName": "StartList",
           "selector": { "xpath": "//List[@AutomationId='startMenu']" },
           "description": "Start menu list"
         },
         {
-          "elementName": "startGroup",
+          "elementName": "StartGroup",
           "selector": { "xpath": "//Group[@Name='Start']" },
           "description": "Start menu group"
         },
         {
-          "elementName": "warehouseButton",
+          "elementName": "WarehouseButton",
           "selector": { "xpath": "//Button[@AutomationId='Warehouse']" },
           "description": "Warehouse navigation button"
         },
         {
-          "elementName": "warehouseGatewayButton",
+          "elementName": "WarehouseGatewayButton",
           "selector": { "xpath": "//Button[@AutomationId='Gateway']" },
           "description": "Warehouse Gateway navigation button"
         },
         {
-          "elementName": "transportationButton",
+          "elementName": "TransportationButton",
           "selector": { "xpath": "//*[@AutomationId='Transportation']" },
           "description": "Transportation navigation button"
         },
         {
-          "elementName": "outputManagerButton",
+          "elementName": "OutputManagerButton",
           "selector": { "xpath": "//Button[@AutomationId='OutputManager']" },
           "description": "Output Manager navigation button"
         },
         {
-          "elementName": "dockButton",
+          "elementName": "DockButton",
           "selector": { "xpath": "//Button[@AutomationId='Dock']" },
           "description": "Dock navigation button"
+        }
+      ]
+    },
+    {
+      "name": "OutputManagerPage",
+      "description": "Output Manager screen within the Smart Client",
+      "elements": [
+        {
+          "elementName": "SearchButton",
+          "selector": { "xpath": "//*[@Name='Output Manager']//*[@ClassName='PopupButton']" },
+          "description": "Search popup button on the Output Manager page"
+        },
+        {
+          "elementName": "MainUrlCell",
+          "selector": { "xpath": "//DataGrid//DataItem[@AutomationId='Row_0']//Custom[@AutomationId='Cell_MainUrl']" },
+          "description": "Main URL cell in the first row of the Output Manager data grid"
+        },
+        {
+          "elementName": "FallbackUrlCell",
+          "selector": { "xpath": "//DataGrid//DataItem[@AutomationId='Row_0']//Custom[@AutomationId='Cell_FallbackUrl']" },
+          "description": "Fallback URL cell in the first row of the Output Manager data grid"
         }
       ]
     }

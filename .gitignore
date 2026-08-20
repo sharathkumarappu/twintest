@@ -5,6 +5,9 @@ screenshots/
 allure-results/
 allure-report/
 .twintest/
+.claude/
+.vscode/
+target/
 *.log
 .env
 .env.local

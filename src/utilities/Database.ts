@@ -21,6 +21,7 @@ import {
   parseDateTime,
   type DbConnectionConfig,
 } from './DatabaseUtility.js';
+import { waitMs } from './wait.js';
 
 // Re-export sanitization helpers for direct use in step definitions
 export { sqlLiteral, sqlNumber, sqlIdentifier } from './DatabaseUtility.js';
@@ -99,7 +100,7 @@ export class Database {
         const elapsed = Date.now() - startTime;
         if (elapsed >= recordTimeout) break;
 
-        await this.sleep(Math.min(checkInterval, recordTimeout - elapsed));
+        await waitMs(Math.min(checkInterval, recordTimeout - elapsed));
       } while (true);
 
       if (attempts > 1) {
@@ -360,7 +361,4 @@ export class Database {
     }
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }

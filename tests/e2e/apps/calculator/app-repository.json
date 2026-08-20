@@ -1,0 +1,135 @@
+{
+  "windows": [
+    {
+      "name": "Calculator",
+      "description": "Windows Calculator application (UWP)",
+      "elements": [
+        {
+          "elementName": "ResultDisplay",
+          "selector": { "automationId": "CalculatorResults" },
+          "description": "The main display showing calculation results"
+        },
+        {
+          "elementName": "DigitZero",
+          "selector": { "automationId": "num0Button" },
+          "description": "Number 0 button"
+        },
+        {
+          "elementName": "DigitOne",
+          "selector": { "automationId": "num1Button" },
+          "description": "Number 1 button"
+        },
+        {
+          "elementName": "DigitTwo",
+          "selector": { "automationId": "num2Button" },
+          "description": "Number 2 button"
+        },
+        {
+          "elementName": "DigitThree",
+          "selector": { "automationId": "num3Button" },
+          "description": "Number 3 button"
+        },
+        {
+          "elementName": "DigitFour",
+          "selector": { "automationId": "num4Button" },
+          "description": "Number 4 button"
+        },
+        {
+          "elementName": "DigitFive",
+          "selector": { "automationId": "num5Button" },
+          "description": "Number 5 button"
+        },
+        {
+          "elementName": "DigitSix",
+          "selector": { "automationId": "num6Button" },
+          "description": "Number 6 button"
+        },
+        {
+          "elementName": "DigitSeven",
+          "selector": { "automationId": "num7Button" },
+          "description": "Number 7 button"
+        },
+        {
+          "elementName": "DigitEight",
+          "selector": { "automationId": "num8Button" },
+          "description": "Number 8 button"
+        },
+        {
+          "elementName": "DigitNine",
+          "selector": { "automationId": "num9Button" },
+          "description": "Number 9 button"
+        },
+        {
+          "elementName": "PlusButton",
+          "selector": { "automationId": "plusButton" },
+          "description": "Addition operator"
+        },
+        {
+          "elementName": "MinusButton",
+          "selector": { "automationId": "minusButton" },
+          "description": "Subtraction operator"
+        },
+        {
+          "elementName": "MultiplyButton",
+          "selector": { "automationId": "multiplyButton" },
+          "description": "Multiplication operator"
+        },
+        {
+          "elementName": "DivideButton",
+          "selector": { "automationId": "divideButton" },
+          "description": "Division operator"
+        },
+        {
+          "elementName": "EqualsButton",
+          "selector": { "automationId": "equalButton" },
+          "description": "Equals button"
+        },
+        {
+          "elementName": "ClearButton",
+          "selector": { "automationId": "clearButton" },
+          "description": "Clear (C) button"
+        },
+        {
+          "elementName": "ClearEntryButton",
+          "selector": { "automationId": "clearEntryButton" },
+          "description": "Clear Entry (CE) button"
+        },
+        {
+          "elementName": "BackspaceButton",
+          "selector": { "automationId": "backSpaceButton" },
+          "description": "Backspace button"
+        },
+        {
+          "elementName": "DecimalButton",
+          "selector": { "automationId": "decimalSeparatorButton" },
+          "description": "Decimal separator button"
+        },
+        {
+          "elementName": "NegateButton",
+          "selector": { "automationId": "negateButton" },
+          "description": "Negate (+/-) button"
+        },
+        {
+          "elementName": "NavigationMenu",
+          "selector": { "automationId": "TogglePaneButton" },
+          "description": "Hamburger menu to switch calculator modes"
+        },
+        {
+          "elementName": "StandardMode",
+          "selector": { "automationId": "Standard" },
+          "description": "Standard calculator mode menu item"
+        },
+        {
+          "elementName": "ScientificMode",
+          "selector": { "automationId": "Scientific" },
+          "description": "Scientific calculator mode menu item"
+        },
+        {
+          "elementName": "ProgrammerMode",
+          "selector": { "automationId": "Programmer" },
+          "description": "Programmer calculator mode menu item"
+        }
+      ]
+    }
+  ]
+}
