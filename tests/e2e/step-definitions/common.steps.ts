@@ -22,22 +22,33 @@ import { DesktopWorld } from '../support/world.js';
 import { execSync } from 'child_process';
 import os from 'os';
 import { waitSeconds, waitMs } from '../../../src/utilities/wait.js';
+import { formatDynamicDatetime } from '../../../src/utilities/DatabaseUtility.js';
+import {
+  getWindowHandleByTitle,
+  createSessionForWindow,
+  WMS_WINDOW_TITLE,
+} from '../apps/wms/wms-launch.js';
 
 // ---------------------------------------------------------------------------
 // Context store
 // ---------------------------------------------------------------------------
 
 Given('Update context {word} -> {}', async function (this: DesktopWorld, key: string, value: string) {
-  this.context[key] = value;
-  console.log(`[twintest] Context: ${key} = ${value}`);
+  const datetime = formatDynamicDatetime(value);
+  const resolved = datetime ?? (value.startsWith('CONTEXT-') ? this.contextCheck(value) : value);
+  this.context[key] = resolved;
+  console.log(`[twintest] Context: ${key} = ${resolved}`);
 });
 
 Given('Update context variables', async function (this: DesktopWorld, table: DataTable) {
   console.log('[twintest] Updating context variables from DataTable');
-  const rows = table.rows();
+  const rows = table.raw();
   for (const [key, value] of rows) {
-    this.context[key.trim()] = value.trim();
-    console.log(`[twintest] Context: ${key.trim()} = ${value.trim()}`);
+    const v = value.trim();
+    const datetime = formatDynamicDatetime(v);
+    const resolved = datetime ?? (v.startsWith('CONTEXT-') ? this.contextCheck(v) : v);
+    this.context[key.trim()] = resolved;
+    console.log(`[twintest] Context: ${key.trim()} = ${resolved}`);
   }
 });
 
@@ -171,13 +182,24 @@ Given('Wait {int} seconds', async function (this: DesktopWorld, seconds: number)
 
 Given('Switch to the next active window', async function (this: DesktopWorld) {
   console.log('[twintest] Switching to the next active window');
-  const handles = await this.steps.driver.getWindowHandles();
-  if (handles.length > 1) {
-    await this.steps.driver.switchToWindow(handles[handles.length - 1]);
-    console.log(`[twintest] Switched to window handle: ${handles[handles.length - 1]}`);
-  } else {
-    console.log('[twintest] Only one window handle available — staying on current');
+  // Re-discover the app window handle and create a fresh Appium session attached to it.
+  const appHandle = await getWindowHandleByTitle(WMS_WINDOW_TITLE, 30000, 2000);
+  if (!appHandle) {
+    throw new Error(`Window '${WMS_WINDOW_TITLE}' not found after transition.`);
   }
+
+  // Terminate old session gracefully
+  try { await this.steps.driver.deleteSession(); } catch { /* may already be gone */ }
+
+  // Create fresh session on the new handle
+  const appSession = await createSessionForWindow(appHandle);
+  this.init(appSession as any);
+
+  // Update global browser reference so WDIO's session cleanup doesn't fail
+  Object.assign(browser, { sessionId: (appSession as any).sessionId });
+
+  this.activeWindow = 'LeftPanelMenuPage';
+  console.log(`[twintest] Switched to next active window -> handle 0x${appHandle}`);
 });
 
 Given('Switch to window {word}', async function (this: DesktopWorld, title: string) {

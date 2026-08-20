@@ -94,6 +94,89 @@ export function toOracleTimestamp(date: Date): string {
 }
 
 // ---------------------------------------------------------------------------
+// Dynamic datetime parsing (mirrors ContextUtilities.java)
+// ---------------------------------------------------------------------------
+
+const DATETIME_KEYWORD_PATTERN = /^(now|today|tomorrow|yesterday)/;
+const OFFSET_PATTERN = /([+-]\d+)\s*(days?|hours?|weeks?|minutes?)/g;
+
+/**
+ * Parse a dynamic date/time expression and return a Date.
+ * Supports: "now", "today", "tomorrow", "yesterday"
+ *   with optional offsets: "+2 days", "-4 hours", "+30 minutes", "-1 weeks"
+ *   and chained offsets: "tomorrow-280 minutes"
+ *
+ * Returns null when the input is not a recognised dynamic expression.
+ */
+export function parseDynamicDateTime(input: string): Date | null {
+  if (!input || input.trim() === '') return null;
+
+  const normalized = input.trim().toLowerCase();
+  const keywordMatch = normalized.match(DATETIME_KEYWORD_PATTERN);
+  if (!keywordMatch) return null;
+
+  const keyword = keywordMatch[1];
+  const now = new Date();
+  let result: Date;
+
+  switch (keyword) {
+    case 'now':
+      result = new Date(now);
+      break;
+    case 'today':
+      result = new Date(now);
+      break;
+    case 'tomorrow':
+      result = new Date(now);
+      result.setDate(result.getDate() + 1);
+      break;
+    case 'yesterday':
+      result = new Date(now);
+      result.setDate(result.getDate() - 1);
+      break;
+    default:
+      return null;
+  }
+
+  // Apply all offsets (e.g., "+2 days", "-4 hours")
+  let match: RegExpExecArray | null;
+  const re = new RegExp(OFFSET_PATTERN.source, OFFSET_PATTERN.flags);
+  while ((match = re.exec(normalized)) !== null) {
+    const value = parseInt(match[1], 10);
+    const unit = match[2].replace(/s$/, ''); // normalise "days" → "day"
+
+    switch (unit) {
+      case 'minute':
+        result.setMinutes(result.getMinutes() + value);
+        break;
+      case 'hour':
+        result.setHours(result.getHours() + value);
+        break;
+      case 'day':
+        result.setDate(result.getDate() + value);
+        break;
+      case 'week':
+        result.setDate(result.getDate() + value * 7);
+        break;
+      default:
+        throw new Error(`Unsupported time unit: ${unit}`);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * If the input is a dynamic datetime expression, parse and format it as
+ * "yyyy-MM-dd HH:mm". Otherwise return null (the input is not a datetime).
+ */
+export function formatDynamicDatetime(input: string): string | null {
+  const date = parseDynamicDateTime(input);
+  if (!date) return null;
+  return toOracleTimestamp(date).slice(0, 16); // "yyyy-MM-dd HH:mm"
+}
+
+// ---------------------------------------------------------------------------
 // Connection management
 // ---------------------------------------------------------------------------
 

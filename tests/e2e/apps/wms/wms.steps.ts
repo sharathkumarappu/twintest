@@ -91,29 +91,6 @@ Given('I log in to WMS with username {string} and password {string}', async func
   this.activeWindow = 'LeftPanelMenuPage';
 });
 
-Given('Reattach to the WMS application', async function (this: DesktopWorld) {
-  console.log('[twintest:wms] Reattaching to the WMS application');
-  // After login or window transitions, the app may have a new top-level window.
-  // Re-discover the handle and create a fresh Appium session attached to it.
-  const appHandle = await getWindowHandleByTitle(WMS_WINDOW_TITLE, 30000, 2000);
-  if (!appHandle) {
-    throw new Error(`WMS window '${WMS_WINDOW_TITLE}' not found after transition.`);
-  }
-
-  // Terminate old session gracefully
-  try { await this.steps.driver.deleteSession(); } catch { /* may already be gone */ }
-
-  // Create fresh session on the new handle
-  const appSession = await createSessionForWindow(appHandle);
-  this.init(appSession as any);
-
-  // Update global browser reference so WDIO's session cleanup doesn't fail
-  Object.assign(browser, { sessionId: (appSession as any).sessionId });
-
-  this.activeWindow = 'LeftPanelMenuPage';
-  console.log(`[twintest:wms] Reattached to WMS window -> handle 0x${appHandle}`);
-});
-
 When('I navigate to {string} via the left panel', async function (
   this: DesktopWorld,
   menuItem: string,

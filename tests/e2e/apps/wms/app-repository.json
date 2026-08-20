@@ -135,6 +135,32 @@
           "description": "Fallback URL cell in the first row of the Output Manager data grid"
         }
       ]
+    },
+    {
+      "name": "NodePage",
+      "description": "Transportation Node search and overview screen",
+      "elements": [
+        {
+          "elementName": "NodeDescriptionInput",
+          "selector": { "xpath": "//*[@AutomationId='NodeSearchPanelViewUc']//*[@AutomationId='NodeDescription']" },
+          "description": "Node description search input"
+        },
+        {
+          "elementName": "TypeCombobox",
+          "selector": { "xpath": "//*[@AutomationId='NodeSearchPanelViewUc']//*[@AutomationId='TypeOfNode'][@ClassName='ComboBox']" },
+          "description": "Type of Node combobox filter"
+        },
+        {
+          "elementName": "SearchButton",
+          "selector": { "xpath": "//*[@AutomationId='NodeSearchPanelViewUc']//*[@ClassName='PopupButton']" },
+          "description": "Search button on the Node page"
+        },
+        {
+          "elementName": "DescriptionCell",
+          "selector": { "xpath": "//*[@AutomationId='NodeOverviewViewUc']//*[@AutomationId='Row_0']//*[@AutomationId='Cell_NodeDescription']//*[@ClassName='TextBlock']" },
+          "description": "Description cell in the first row of the Node overview grid"
+        }
+      ]
     }
   ]
 }

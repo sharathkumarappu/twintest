@@ -19,6 +19,8 @@ import {
   sqlIdentifier,
   sqlProcedureName,
   parseDateTime,
+  parseDynamicDateTime,
+  toOracleTimestamp,
   type DbConnectionConfig,
 } from './DatabaseUtility.js';
 import { waitMs } from './wait.js';
@@ -256,6 +258,54 @@ export class Database {
   // ---------------------------------------------------------------------------
 
   /**
+   * Convert a context value to its SQL representation, mirroring Java's
+   * QueryAttributePair.convertValueFormat() + toString():
+   *
+   *   1. NULL / "null" / "NULL" → SQL NULL
+   *   2. Pure integer (not starting with '0') → bare number
+   *   3. Parseable date string → TO_DATE('yyyyMMdd HH:mm', 'YYYYMMDD HH24:MI')
+   *   4. Everything else → quoted string literal
+   */
+  private formatValueForSQL(value: string): string {
+    // 1. NULL
+    if (value == null || value === 'NULL' || value === 'null') {
+      return 'NULL';
+    }
+
+    // 2. Integer (not starting with '0' to preserve codes like '0123')
+    if (!value.startsWith('0') && /^-?\d+$/.test(value)) {
+      return value;
+    }
+
+    // 3. Date/time — try parsing as a date string (matches Java's formatDateTimeForOracle)
+    const DATE_FORMATS = [
+      /^\d{8} \d{2}:\d{2}$/,                  // yyyyMMdd HH:mm
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, // yyyy-MM-dd HH:mm:ss
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, // yyyy-MM-ddTHH:mm:ss
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,       // yyyy-MM-dd HH:mm
+    ];
+
+    for (const fmt of DATE_FORMATS) {
+      if (fmt.test(value)) {
+        // Parse and re-format to Oracle's yyyyMMdd HH:mm
+        try {
+          const date = parseDateTime(value);
+          const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+          const oracleFmt =
+            `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())} ` +
+            `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+          return `TO_DATE('${oracleFmt}', 'YYYYMMDD HH24:MI')`;
+        } catch {
+          // Not a valid date — fall through to string
+        }
+      }
+    }
+
+    // 4. String literal (escape single quotes)
+    return "'" + value.replace(/'/g, "''") + "'";
+  }
+
+  /**
    * Build and execute an INSERT query from context variable keys.
    *
    * @param tableName - Target table (validated as safe identifier)
@@ -268,7 +318,7 @@ export class Database {
       if (value === undefined) {
         throw new Error(`Context key '${col}' not found for INSERT into ${tableName}`);
       }
-      return sqlLiteral(value);
+      return this.formatValueForSQL(value);
     });
 
     const safeColumns = columns.map(c => sqlIdentifier(c));
@@ -292,7 +342,7 @@ export class Database {
       if (value === undefined) {
         throw new Error(`Context key '${col}' not found for UPDATE SET on ${tableName}`);
       }
-      return `${sqlIdentifier(col)} = ${sqlLiteral(value)}`;
+      return `${sqlIdentifier(col)} = ${this.formatValueForSQL(value)}`;
     });
 
     const whereClauses = whereColumns.map(col => {
@@ -300,7 +350,7 @@ export class Database {
       if (value === undefined) {
         throw new Error(`Context key '${col}' not found for UPDATE WHERE on ${tableName}`);
       }
-      return `${sqlIdentifier(col)} = ${sqlLiteral(value)}`;
+      return `${sqlIdentifier(col)} = ${this.formatValueForSQL(value)}`;
     });
 
     const sql = `UPDATE ${safeTable} SET ${setClauses.join(', ')} WHERE ${whereClauses.join(' AND ')}`;
